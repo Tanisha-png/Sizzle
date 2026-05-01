@@ -1,4 +1,8 @@
 {
+  "scripts": {
+  "dev": "nodemon server.ts",
+  "start": "node server.js"
+},
   "dependencies": {
     "dotenv": "^17.4.2",
     "mongoose": "^8.23.1"
