@@ -14,6 +14,9 @@ app.use(express.json());
 
 //! TODO: Add global error handler middleware (must be after all routes)
 
+// app.get('/', (req, res) => {
+//     res.send("🔥 The Sizzle Server is up and running!")
+// })
 
 //! Start server
 app.listen(3000, () => {
