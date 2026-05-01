@@ -16,8 +16,8 @@ app.use(express.json());
 
 
 //! Start server
-app.listen(PORT, () => {
-    console.log(`Server listening on port: ${PORT}`)
+app.listen(3000, () => {
+    console.log("🔥 Server is sizzling on port 3000");
 });
 
 // ? Don't forget to export the app
