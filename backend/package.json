@@ -1,10 +1,13 @@
 {
   "scripts": {
-    "dev": "nodemon --loader ts-node/esm server.ts",
+    "dev": "nodemon --exec tsx server.ts",
     "start": "node server.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
     "mongoose": "^8.23.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
   }
 }
