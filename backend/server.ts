@@ -1,6 +1,7 @@
 import "dotenv/config";
 import dotenv from "dotenv";
 import path from "path";
+import cors from "cors";
 
 //? Tell dotenv to look in the current directory for the .env file
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -12,6 +13,7 @@ import recipeRoutes from "./routes/recipeRoutes";
 import { error } from "console";
 
 const app = express();
+app.use(cors());
 const PORT = 3000;
 
 //? Parse JSON
