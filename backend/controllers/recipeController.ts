@@ -21,6 +21,31 @@ const recipeController = {
                 message: {error: "Error saving a recipe"},
             });
         }
+    },
+
+       //? DELETE recipe
+    deletedRecipe: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const {id} = req.params;
+            const deletedRecipe = await Recipe.findByIdAndDelete(id);
+
+            if (!deletedRecipe) {
+                return next({
+                    log: "recipeController.deleteRecipe: ERROR: ID not found",
+                    status: 404,
+                    message: {error: "Recipe not found"},
+                });
+            }
+
+            res.locals.deleted = deletedRecipe;
+            return next();
+        } catch (error) {
+            return next({
+                log: `recipeController.deleteRecipe: ERROR: ${error}`,
+                status: 400,
+                message: {error: "Error deleting recipe"},
+            });
+        }
     }
 };
 
