@@ -1,43 +1,46 @@
 import "dotenv/config";
+import dotenv from "dotenv";
 import path from "path";
+
+//? Tell dotenv to look in the current directory for the .env file
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 import express from "express";
 import mongoose from "mongoose";
 import Recipe from "./models/Recipe";
+import recipeRoutes from "./routes/recipeRoutes";
 
 const app = express();
 const PORT = 3000;
 
+//? Parse JSON
 app.use(express.json());
 
 const dbUri = process.env.MONGO_URI;
 
+//? 1. Check if URI exists to satisfy TypeScript and prevent runtime crashes
 if (!dbUri) {
-    console.error("❌ Error: MONGO_URI is not defined in the .env file.");
-    process.exit(1); // Stop the server if there's no database string
+    console.error("❌ Error: MONGO_URI is undefined. Check your .env file path.");
+    process.exit(1); // Stop the server if we can't connect to the DB
+} else {
+  //? 2. Connect using the validated dbUri
+mongoose
+    .connect(dbUri) 
+    .then(() => {
+        console.log("✅ Success: Sizzle is connected to MongoDB Atlas!");
+      //? TEST SEEDING REMOVED: 
+      //? Your Garlic Shrimp is already safe in the cloud!
+      //? We now leave this block empty or use it to initialize other services.
+    })
+    .catch((err) => {
+        console.error("❌ Mongoose Connection Error:", err.message);
+    });
 }
 
-mongoose.connect(dbUri!).then(async () => {
-    console.log("✅ Success: Sizzle is connected to MongoDB Atlas!");
-
-    // --- TEST SEEDING START ---
-    try {
-        const testRecipe = new Recipe({
-        title: "Sizzling Garlic Shrimp",
-        ingredients: ["Shrimp", "Garlic", "Olive Oil", "Red Pepper Flakes"],
-        instructions:
-            "Sauté garlic in oil, add shrimp until pink, sprinkle flakes.",
-        cookTime: 10,
-    });
-
-    const savedRecipe = await testRecipe.save();
-    console.log("🚀 Test Recipe Saved:", savedRecipe.title);
-    } catch (err) {
-        console.error("❌ Error saving test recipe:", err);
-    }
-  // --- TEST SEEDING END ---
-});
-
 //! TODO: Create express.static(path.resolve(import.meta.dirname, '../dist')) middleware.
+
+//! TODO: Use the routes
+app.use("/api/recipes", recipeRoutes);
 
 //! TODO: Add global error handler middleware (must be after all routes)
 
@@ -47,7 +50,7 @@ mongoose.connect(dbUri!).then(async () => {
 
 //! Start server
 app.listen(3000, () => {
-  console.log("🔥 Server is sizzling on port 3000");
+    console.log("🔥 Server is sizzling on port 3000");
 });
 
 // ? Don't forget to export the app
