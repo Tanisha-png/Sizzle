@@ -5,10 +5,11 @@ import path from "path";
 //? Tell dotenv to look in the current directory for the .env file
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-import express from "express";
+import express, {Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import Recipe from "./models/Recipe";
 import recipeRoutes from "./routes/recipeRoutes";
+import { error } from "console";
 
 const app = express();
 const PORT = 3000;
@@ -43,6 +44,17 @@ mongoose
 app.use("/api/recipes", recipeRoutes);
 
 //! TODO: Add global error handler middleware (must be after all routes)
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    const defaultErr = {
+        log: "Express error handler caught unknown middleware error",
+        status: 500,
+        message: {err: "An error has occurred ❌."}
+    };
+    const errorObj = Object.assign({}, defaultErr, err);
+    //? create a console log
+    console.log(errorObj.log);
+    return res.status(errorObj.status).json(errorObj.message);
+});
 
 // app.get('/', (req, res) => {
 //     res.send("🔥 The Sizzle Server is up and running!")
