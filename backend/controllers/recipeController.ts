@@ -23,6 +23,7 @@ const recipeController = {
             const newRecipe = new Recipe(req.body);
             const savedRecipe = await newRecipe.save();
 
+            //! Guard clause
             if (!req.body.title || !req.body.ingredients) {
                 return next({
                     log: "recipeController.createRecipe: Missing required fields",
