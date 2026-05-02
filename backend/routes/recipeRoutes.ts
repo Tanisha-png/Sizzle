@@ -1,4 +1,5 @@
 import express, {Request, Response, NextFunction} from "express";
+import recipeController from "../controllers/recipeController";
 import Recipe from "../models/Recipe";
 
 const router = express.Router();
@@ -14,15 +15,20 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-//? POST a new recipe
-router.post("/", async (req, res) => {
-    try {
-        const newRecipe = new Recipe(req.body);
-        const savedRecipe = await newRecipe.save();
-        res.status(200).json(savedRecipe)
-    } catch (error) {
-        res.status(400).json({message: "Error saving recipe", error: error});
-    }
+// //? POST a new recipe
+// router.post("/", async (req, res) => {
+//     try {
+//         const newRecipe = new Recipe(req.body);
+//         const savedRecipe = await newRecipe.save();
+//         res.status(200).json(savedRecipe)
+//     } catch (error) {
+//         res.status(400).json({message: "Error saving recipe", error: error});
+//     }
+// });
+
+//? POST /api/recipes
+router.post("/", recipeController.createRecipe, (req: Request, res: Response) => {
+    return res.status(200).json(res.locals.newRecipe)
 });
 
 //? DELETE /api/recipes/:id (Delete a specific recipe by ID)
