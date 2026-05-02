@@ -15,13 +15,21 @@ const recipeController = {
             });
         }
     },
-    
+
     //? Create a new recipe
     createRecipe: async (req: Request, res: Response, next: NextFunction) => {
         try {
             //? Create a new recipe using the data sent in the request body
             const newRecipe = new Recipe(req.body);
             const savedRecipe = await newRecipe.save();
+
+            if (!req.body.title || !req.body.ingredients) {
+                return next({
+                    log: "recipeController.createRecipe: Missing required fields",
+                    status: 400,
+                    message: {error: "Please provide a title and ingredients 😃!"}
+                });
+            }
 
             //? Store the result in res.locals to pass it to the next function
             res.locals.newRecipe = savedRecipe;
