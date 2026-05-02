@@ -2,7 +2,21 @@ import {Request, Response, NextFunction} from "express";
 import Recipe from "../models/Recipe";
 
 const recipeController = {
-    //? POST a new recipe
+    //? Get all recipes
+    getAllRecipes: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const recipes = await Recipe.find({});
+            res.locals.recipes = recipes;
+            return next();
+        } catch (error) {
+            return next({
+                log: `recipeController.getAllRecipes: ERROR: ${error}`,
+                message: {error: "Error fetching recipes"},
+            });
+        }
+    },
+    
+    //? Create a new recipe
     createRecipe: async (req: Request, res: Response, next: NextFunction) => {
         try {
             //? Create a new recipe using the data sent in the request body
