@@ -54,5 +54,10 @@ router.delete("/:id", recipeController.deletedRecipe, (req: Request, res: Respon
     });
 });
 
+//? PATCH: change one field(change the title)
+router.patch("/:id", recipeController.updateRecipe, (req: Request, res: Response) => {
+    return res.status(200).json(res.locals.updated);
+});
+
 
 export default router;
