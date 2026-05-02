@@ -1,6 +1,7 @@
 import express, {Request, Response, NextFunction} from "express";
 import recipeController from "../controllers/recipeController";
 import Recipe from "../models/Recipe";
+import { deleteModel } from "mongoose";
 
 const router = express.Router();
 
@@ -31,19 +32,26 @@ router.post("/", recipeController.createRecipe, (req: Request, res: Response) =>
     return res.status(200).json(res.locals.newRecipe)
 });
 
-//? DELETE /api/recipes/:id (Delete a specific recipe by ID)
-router.delete("/:id", async (req: Request, res: Response, next: NextFunction ) => {
-    try {
-        const {id} = req.params;
-        const deletedRecipe = await Recipe.findByIdAndDelete(id);
+// //? DELETE /api/recipes/:id (Delete a specific recipe by ID)
+// router.delete("/:id", async (req: Request, res: Response, next: NextFunction ) => {
+//     try {
+//         const {id} = req.params;
+//         const deletedRecipe = await Recipe.findByIdAndDelete(id);
 
-        if (!deletedRecipe) {
-            return res.status(404).json({message: "Recipe not found"})
-        }
-        res.status(200).json({message: "Recipe deleted successfully"})
-    } catch (error) {
-        next(error)
-    }
+//         if (!deletedRecipe) {
+//             return res.status(404).json({message: "Recipe not found"})
+//         }
+//         res.status(200).json({message: "Recipe deleted successfully"})
+//     } catch (error) {
+//         next(error)
+//     }
+// });
+
+router.delete("/:id", recipeController.deletedRecipe, (req: Request, res: Response) => {
+    return res.status(200).json({
+        message: "Recipe deleted successfully",
+        deletedRecipe: res.locals.deleted
+    });
 });
 
 
