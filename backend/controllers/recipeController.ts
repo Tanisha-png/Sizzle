@@ -46,6 +46,35 @@ const recipeController = {
         }
     },
 
+    //? Update recipe
+    updateRecipe: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const {id} = req.params;
+            //! req.body contains the fields you want to change (ex: change the title)
+            const updatedRecipe = await Recipe.findByIdAndUpdate(id, req.body, {
+                new: true,
+                runValidators: true, //! Make sure the new data follows your schema
+            });
+
+            if (!updatedRecipe) {
+                return next({
+                    log: "recipeController.updateRecipe: ERROR: ID not found",
+                    status: 404,
+                    message: {error: "Recipe not found"},
+                });
+            }
+
+            res.locals.updated = updatedRecipe;
+            return next();
+        } catch (error) {
+            return next({
+                log: `recipeController.updatedRecipe: ERROR: ${error}`,
+                status: 400,
+                message: {error: "Error updated recipe"},
+            });
+        }
+    },
+
        //? DELETE recipe
     deletedRecipe: async (req: Request, res: Response, next: NextFunction) => {
         try {
