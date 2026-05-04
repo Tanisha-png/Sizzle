@@ -40,8 +40,11 @@ function App() {
       <div style={styles.cardGrid}>
         {filteredRecipes.length > 0 ? (
           filteredRecipes.map((recipe) => (
+            /* PASTE THE CODE HERE */
             <div key={recipe._id} style={styles.card}>
               <h2 style={styles.cardTitle}>{recipe.title}</h2>
+
+              <span style={styles.sectionTitle}>Ingredients</span>
               <div style={styles.badgeContainer}>
                 {recipe.ingredients?.map((ing: string, i: number) => (
                   <span key={i} style={styles.badge}>
@@ -49,7 +52,10 @@ function App() {
                   </span>
                 ))}
               </div>
+
+              <span style={styles.sectionTitle}>Instructions</span>
               <p style={styles.instructions}>{recipe.instructions}</p>
+
               <button style={styles.saveBtn}>Save for Later</button>
             </div>
           ))
