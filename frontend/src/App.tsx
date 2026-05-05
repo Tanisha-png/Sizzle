@@ -56,6 +56,28 @@ function App() {
     searchExternalAPI(value); // Trigger API call as user types
   };
 
+  const handleSave = async (recipe: any) => {
+    try {
+      const response = await fetch("/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // We send the normalized recipe data to your MongoDB
+        body: JSON.stringify({
+          title: recipe.title,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+        }),
+      });
+
+      if (response.ok) {
+        alert(`${recipe.title} saved to your collection!`);
+        fetchRecipes(); // Refresh local recipes to include the new one
+      }
+    } catch (err) {
+      console.error("Error saving recipe:", err);
+    }
+  };
+
   // Filter local recipes
   const filteredLocal = recipes.filter((recipe) =>
     recipe.title.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -101,8 +123,14 @@ function App() {
               <span style={styles.sectionTitle}>Instructions</span>
               <p style={styles.instructions}>{recipe.instructions}</p>
 
-              <button style={styles.saveBtn}>
-                {recipe.isExternal ? "Save to My Collection" : "Saved"}
+              <button
+                style={styles.saveBtn}
+                onClick={() => (recipe.isExternal ? handleSave(recipe) : null)}
+                disabled={!recipe.isExternal}
+              >
+                {recipe.isExternal
+                  ? "Save to My Collection"
+                  : "Saved in Collection"}
               </button>
             </div>
           ))
