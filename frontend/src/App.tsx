@@ -199,6 +199,8 @@ const styles = {
     position: "relative" as const,
     height: "100vh",
     width: "100vw",
+    margin: 0,
+    padding: 0,
     overflow: "hidden",
     display: "flex",
     justifyContent: "center",
@@ -209,20 +211,21 @@ const styles = {
     position: "absolute" as const,
     top: "50%",
     left: "50%",
-    minWidth: "100%",
-    minHeight: "100%",
+    width: "100vw",
+    height: "100vh",
     zIndex: 0,
     transform: "translateX(-50%) translateY(-50%)",
     objectFit: "cover" as const,
-    filter: "brightness(0.5)", // Makes the "Sizzle Red" pop against the video
+    filter: "brightness(0.5)",
   },
+  //? ADD THIS SECTION TO REMOVE THE RED LINE
   videoOverlay: {
     position: "absolute" as const,
     top: 0,
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(0,0,0,0.4)", // Darkens the video further for readability
+    backgroundColor: "rgba(0,0,0,0.4)", //? Creates that dark cinematic tint
     zIndex: 1,
   },
   contentWrapper: {
@@ -232,32 +235,35 @@ const styles = {
     flexDirection: "column" as const,
     alignItems: "center",
     textAlign: "center" as const,
-    gap: "20px", // This specifically fixes the overlap issue
+    width: "100%",
   },
   landingHeader: {
-    fontSize: "6rem",
+    fontSize: "7rem",
     color: "#ff4d4d",
-    letterSpacing: "10px",
-    margin: 0,
+    letterSpacing: "12px",
+    margin: "0",
     fontWeight: "900" as const,
+    lineHeight: "1",
   },
   landingTagline: {
     fontSize: "1.4rem",
     color: "#eee",
-    margin: 0, // Removed margin to let the 'gap' do the work
+    marginTop: "40px", //? Pushes text further away from "SIZZLE"
+    marginBottom: "40px",
     maxWidth: "600px",
+    fontWeight: "300" as const,
+    letterSpacing: "1px",
   },
   cookBtn: {
-    marginTop: "20px",
     padding: "18px 60px",
-    fontSize: "1.2rem",
+    fontSize: "1.3rem",
     backgroundColor: "#ff4d4d",
     color: "#fff",
     border: "none",
     borderRadius: "50px",
     cursor: "pointer",
     fontWeight: "bold" as const,
-    boxShadow: "0 4px 20px rgba(255, 77, 77, 0.5)",
+    boxShadow: "0 10px 20px rgba(0, 0, 0, 0.3)",
   },
 };
 

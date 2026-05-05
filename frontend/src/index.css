@@ -109,3 +109,30 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Killing the default browser margins */
+html,
+body,
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow-x: hidden;
+  background-color: #121212;
+  /* Matches your Sizzle theme */
+}
+
+/* Standardizing the box model */
+* {
+  box-sizing: border-box;
+}
