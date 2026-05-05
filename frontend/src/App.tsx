@@ -3,7 +3,7 @@ import AddRecipeForm from "./components/AddRecipeForm";
 
 function App() {
   const [recipes, setRecipes] = useState<any[]>([]);
-  const [externalRecipes, setExternalRecipes] = useState<any[]>([]); // State for API results
+  const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchRecipes = () => {
@@ -17,7 +17,6 @@ function App() {
     fetchRecipes();
   }, []);
 
-  // Function to fetch and normalize data from TheMealDB
   const searchExternalAPI = async (query: string) => {
     if (!query) {
       setExternalRecipes([]);
@@ -35,11 +34,10 @@ function App() {
           _id: meal.idMeal,
           title: meal.strMeal,
           instructions: meal.strInstructions,
-          // MealDB provides ingredients in separate keys (strIngredient1, etc.)
           ingredients: Object.keys(meal)
             .filter((key) => key.includes("strIngredient") && meal[key])
             .map((key) => meal[key]),
-          isExternal: true, // Flag to distinguish API data from your DB
+          isExternal: true,
         }));
         setExternalRecipes(normalized);
       } else {
@@ -53,7 +51,7 @@ function App() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    searchExternalAPI(value); // Trigger API call as user types
+    searchExternalAPI(value);
   };
 
   const handleSave = async (recipe: any) => {
@@ -61,7 +59,6 @@ function App() {
       const response = await fetch("/api/recipes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // We send the normalized recipe data to your MongoDB
         body: JSON.stringify({
           title: recipe.title,
           ingredients: recipe.ingredients,
@@ -71,19 +68,34 @@ function App() {
 
       if (response.ok) {
         alert(`${recipe.title} saved to your collection!`);
-        fetchRecipes(); // Refresh local recipes to include the new one
+        fetchRecipes();
       }
     } catch (err) {
       console.error("Error saving recipe:", err);
     }
   };
 
-  // Filter local recipes
+  //? --- NEW: Handle Delete ---
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this recipe?")) return;
+
+    try {
+      const response = await fetch(`/api/recipes/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        fetchRecipes();
+      }
+    } catch (err) {
+      console.error("Error deleting recipe:", err);
+    }
+  };
+
   const filteredLocal = recipes.filter((recipe) =>
     recipe.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Combine both sources
   const allResults = [...filteredLocal, ...externalRecipes];
 
   return (
@@ -123,15 +135,27 @@ function App() {
               <span style={styles.sectionTitle}>Instructions</span>
               <p style={styles.instructions}>{recipe.instructions}</p>
 
-              <button
-                style={styles.saveBtn}
-                onClick={() => (recipe.isExternal ? handleSave(recipe) : null)}
-                disabled={!recipe.isExternal}
-              >
-                {recipe.isExternal
-                  ? "Save to My Collection"
-                  : "Saved in Collection"}
-              </button>
+              {/* Updated Button Group */}
+              <div style={styles.buttonGroup}>
+                <button
+                  style={styles.saveBtn}
+                  onClick={() =>
+                    recipe.isExternal ? handleSave(recipe) : null
+                  }
+                  disabled={!recipe.isExternal}
+                >
+                  {recipe.isExternal ? "Save to My Collection" : "Saved"}
+                </button>
+
+                {!recipe.isExternal && (
+                  <button
+                    style={styles.deleteBtn}
+                    onClick={() => handleDelete(recipe._id)}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
             </div>
           ))
         ) : (
@@ -147,7 +171,7 @@ function App() {
 const styles = {
   container: {
     padding: "40px",
-    maxWidth: "1200px", // Widened for the grid
+    maxWidth: "1200px",
     margin: "auto",
     backgroundColor: "#121212",
     minHeight: "100vh",
@@ -229,8 +253,12 @@ const styles = {
     marginBottom: "5px",
     display: "block",
   },
-  saveBtn: {
+  buttonGroup: {
+    display: "flex",
+    gap: "10px",
     marginTop: "15px",
+  },
+  saveBtn: {
     padding: "10px",
     backgroundColor: "transparent",
     border: "1px solid #ff4d4d",
@@ -238,6 +266,17 @@ const styles = {
     borderRadius: "6px",
     cursor: "pointer",
     fontWeight: "bold" as const,
+    flex: 2,
+  },
+  deleteBtn: {
+    padding: "10px",
+    backgroundColor: "transparent",
+    border: "1px solid #444",
+    color: "#888",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "bold" as const,
+    flex: 1,
   },
 };
 
