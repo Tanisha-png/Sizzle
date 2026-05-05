@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import AddRecipeForm from "./components/AddRecipeForm";
+import RecipeCard from "./components/RecipeCard";
 
 function App() {
+  const [showDashboard, setShowDashboard] = useState(false); // State to toggle views
   const [recipes, setRecipes] = useState<any[]>([]);
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -13,9 +15,12 @@ function App() {
       .catch((err) => console.error("Error:", err));
   };
 
+  // Only fetch recipes once the user enters the dashboard
   useEffect(() => {
-    fetchRecipes();
-  }, []);
+    if (showDashboard) {
+      fetchRecipes();
+    }
+  }, [showDashboard]);
 
   const searchExternalAPI = async (query: string) => {
     if (!query) {
@@ -75,7 +80,6 @@ function App() {
     }
   };
 
-  //? --- NEW: Handle Delete ---
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this recipe?")) return;
 
@@ -98,6 +102,22 @@ function App() {
 
   const allResults = [...filteredLocal, ...externalRecipes];
 
+  // --- LANDING PAGE VIEW ---
+  if (!showDashboard) {
+    return (
+      <div style={styles.landingContainer}>
+        <h1 style={styles.landingHeader}>SIZZLE</h1>
+        <p style={styles.landingTagline}>
+          Your high-contrast kitchen companion.
+        </p>
+        <button style={styles.cookBtn} onClick={() => setShowDashboard(true)}>
+          Let's Cook
+        </button>
+      </div>
+    );
+  }
+
+  // --- DASHBOARD VIEW ---
   return (
     <div style={styles.container}>
       <h1 style={styles.header}>Sizzle Dashboard</h1>
@@ -117,46 +137,12 @@ function App() {
       <div style={styles.cardGrid}>
         {allResults.length > 0 ? (
           allResults.map((recipe) => (
-            <div key={recipe._id} style={styles.card}>
-              <h2 style={styles.cardTitle}>
-                {recipe.title}
-                {recipe.isExternal && <span style={styles.apiTag}>Global</span>}
-              </h2>
-
-              <span style={styles.sectionTitle}>Ingredients</span>
-              <div style={styles.badgeContainer}>
-                {recipe.ingredients?.map((ing: string, i: number) => (
-                  <span key={i} style={styles.badge}>
-                    {ing}
-                  </span>
-                ))}
-              </div>
-
-              <span style={styles.sectionTitle}>Instructions</span>
-              <p style={styles.instructions}>{recipe.instructions}</p>
-
-              {/* Updated Button Group */}
-              <div style={styles.buttonGroup}>
-                <button
-                  style={styles.saveBtn}
-                  onClick={() =>
-                    recipe.isExternal ? handleSave(recipe) : null
-                  }
-                  disabled={!recipe.isExternal}
-                >
-                  {recipe.isExternal ? "Save to My Collection" : "Saved"}
-                </button>
-
-                {!recipe.isExternal && (
-                  <button
-                    style={styles.deleteBtn}
-                    onClick={() => handleDelete(recipe._id)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
+            <RecipeCard
+              key={recipe._id}
+              recipe={recipe}
+              onSave={handleSave}
+              onDelete={handleDelete}
+            />
           ))
         ) : (
           <p style={{ color: "#aaa" }}>
@@ -199,84 +185,31 @@ const styles = {
     gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
     gap: "25px",
   },
-  card: {
-    backgroundColor: "#1e1e1e",
-    border: "1px solid #333",
-    borderRadius: "12px",
-    padding: "20px",
+  landingContainer: {
+    height: "100vh",
     display: "flex",
     flexDirection: "column" as const,
-  },
-  cardTitle: {
-    margin: "0 0 10px 0",
-    color: "#ff4d4d",
-    display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#121212",
+    color: "#fff",
   },
-  apiTag: {
-    fontSize: "0.6rem",
+  landingHeader: {
+    fontSize: "5rem",
+    color: "#ff4d4d",
+    letterSpacing: "5px",
+    margin: 0,
+  },
+  landingTagline: { fontSize: "1.2rem", color: "#888", marginBottom: "30px" },
+  cookBtn: {
+    padding: "15px 40px",
+    fontSize: "1.2rem",
     backgroundColor: "#ff4d4d",
     color: "#fff",
-    padding: "2px 6px",
-    borderRadius: "4px",
-    textTransform: "uppercase" as const,
-  },
-  badgeContainer: {
-    display: "flex",
-    flexWrap: "wrap" as const,
-    gap: "5px",
-    marginBottom: "15px",
-  },
-  badge: {
-    backgroundColor: "#333",
-    padding: "4px 8px",
-    borderRadius: "4px",
-    fontSize: "0.75rem",
-    color: "#bbb",
-  },
-  instructions: {
-    fontSize: "0.95rem",
-    color: "#ddd",
-    lineHeight: "1.8",
-    flexGrow: 1,
-    whiteSpace: "pre-wrap" as const,
-    borderTop: "1px solid #333",
-    paddingTop: "15px",
-    marginTop: "15px",
-  },
-  sectionTitle: {
-    fontSize: "0.8rem",
-    textTransform: "uppercase" as const,
-    color: "#ff4d4d",
-    letterSpacing: "1px",
-    marginBottom: "5px",
-    display: "block",
-  },
-  buttonGroup: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "15px",
-  },
-  saveBtn: {
-    padding: "10px",
-    backgroundColor: "transparent",
-    border: "1px solid #ff4d4d",
-    color: "#ff4d4d",
-    borderRadius: "6px",
+    border: "none",
+    borderRadius: "50px",
     cursor: "pointer",
     fontWeight: "bold" as const,
-    flex: 2,
-  },
-  deleteBtn: {
-    padding: "10px",
-    backgroundColor: "transparent",
-    border: "1px solid #444",
-    color: "#888",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontWeight: "bold" as const,
-    flex: 1,
   },
 };
 
