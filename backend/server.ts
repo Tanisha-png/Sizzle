@@ -45,6 +45,17 @@ mongoose
 //! TODO: Use the routes
 app.use("/api/recipes", recipeRoutes);
 
+//! DELETE: delete a specific recipe
+app.delete("/api/recipes/:id", async (req, res) => {
+    try {
+        const {id} = req.params;
+        await Recipe.findByIdAndDelete(id); //? Using the Mongoose Model
+        res.status(200).json({message: "Recipe deleted succuessfully 👍"});
+    } catch (error) {
+        res.status(500).json({message: "Failed to delete recipe ❌"})
+    }
+});
+
 //! TODO: Add global error handler middleware (must be after all routes)
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const defaultErr = {
