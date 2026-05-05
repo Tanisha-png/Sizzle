@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import AddRecipeForm from "./components/AddRecipeForm";
 import RecipeCard from "./components/RecipeCard";
+import sizzleVideo from "./assets/sizzle.mp4"
 
 function App() {
-  const [showDashboard, setShowDashboard] = useState(false); // State to toggle views
+  const [showDashboard, setShowDashboard] = useState(false); //? State to toggle views
   const [recipes, setRecipes] = useState<any[]>([]);
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,7 +16,7 @@ function App() {
       .catch((err) => console.error("Error:", err));
   };
 
-  // Only fetch recipes once the user enters the dashboard
+  //? Only fetch recipes once the user enters the dashboard
   useEffect(() => {
     if (showDashboard) {
       fetchRecipes();
@@ -102,22 +103,31 @@ function App() {
 
   const allResults = [...filteredLocal, ...externalRecipes];
 
-  // --- LANDING PAGE VIEW ---
+  //? --- LANDING PAGE VIEW ---
   if (!showDashboard) {
     return (
       <div style={styles.landingContainer}>
-        <h1 style={styles.landingHeader}>SIZZLE</h1>
-        <p style={styles.landingTagline}>
-          Your high-contrast kitchen companion.
-        </p>
-        <button style={styles.cookBtn} onClick={() => setShowDashboard(true)}>
-          Let's Cook
-        </button>
+        <video autoPlay loop muted playsInline style={styles.videoBackground}>
+          <source src={sizzleVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        <div style={styles.videoOverlay}></div>
+
+        <div style={styles.contentWrapper}>
+          <h1 style={styles.landingHeader}>SIZZLE</h1>
+          <p style={styles.landingTagline}>
+            Your high-contrast kitchen companion.
+          </p>
+          <button style={styles.cookBtn} onClick={() => setShowDashboard(true)}>
+            Let's Cook
+          </button>
+        </div>
       </div>
     );
   }
 
-  // --- DASHBOARD VIEW ---
+  //? --- DASHBOARD VIEW ---
   return (
     <div style={styles.container}>
       <h1 style={styles.header}>Sizzle Dashboard</h1>
@@ -186,23 +196,60 @@ const styles = {
     gap: "25px",
   },
   landingContainer: {
+    position: "relative" as const,
     height: "100vh",
+    width: "100vw",
+    overflow: "hidden",
     display: "flex",
-    flexDirection: "column" as const,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#121212",
-    color: "#fff",
+    backgroundColor: "#000",
+  },
+  videoBackground: {
+    position: "absolute" as const,
+    top: "50%",
+    left: "50%",
+    minWidth: "100%",
+    minHeight: "100%",
+    zIndex: 0,
+    transform: "translateX(-50%) translateY(-50%)",
+    objectFit: "cover" as const,
+    filter: "brightness(0.5)", // Makes the "Sizzle Red" pop against the video
+  },
+  videoOverlay: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.4)", // Darkens the video further for readability
+    zIndex: 1,
+  },
+  contentWrapper: {
+    position: "relative" as const,
+    zIndex: 2,
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    textAlign: "center" as const,
+    gap: "20px", // This specifically fixes the overlap issue
   },
   landingHeader: {
-    fontSize: "5rem",
+    fontSize: "6rem",
     color: "#ff4d4d",
-    letterSpacing: "5px",
+    letterSpacing: "10px",
     margin: 0,
+    fontWeight: "900" as const,
   },
-  landingTagline: { fontSize: "1.2rem", color: "#888", marginBottom: "30px" },
+  landingTagline: {
+    fontSize: "1.4rem",
+    color: "#eee",
+    margin: 0, // Removed margin to let the 'gap' do the work
+    maxWidth: "600px",
+  },
   cookBtn: {
-    padding: "15px 40px",
+    marginTop: "20px",
+    padding: "18px 60px",
     fontSize: "1.2rem",
     backgroundColor: "#ff4d4d",
     color: "#fff",
@@ -210,6 +257,7 @@ const styles = {
     borderRadius: "50px",
     cursor: "pointer",
     fontWeight: "bold" as const,
+    boxShadow: "0 4px 20px rgba(255, 77, 77, 0.5)",
   },
 };
 
