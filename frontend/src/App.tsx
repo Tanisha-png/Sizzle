@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; // Added missing imports
 import AddRecipeForm from "./components/AddRecipeForm";
 import RecipeCard from "./components/RecipeCard";
-import sizzleVideo from "./assets/sizzle.mp4"
+import sizzleVideo from "./assets/sizzle.mp4";
 
 function App() {
-  const [showDashboard, setShowDashboard] = useState(false); //? State to toggle views
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
   const [recipes, setRecipes] = useState<any[]>([]);
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -16,12 +17,21 @@ function App() {
       .catch((err) => console.error("Error:", err));
   };
 
-  //? Only fetch recipes once the user enters the dashboard
   useEffect(() => {
     if (showDashboard) {
       fetchRecipes();
     }
   }, [showDashboard]);
+
+  // --- Transition Handler ---
+  const handleEnterApp = () => {
+    setIsExiting(true); // Start the fade/scale animation
+
+    // Delay switching components to allow the animation to play
+    setTimeout(() => {
+      setShowDashboard(true);
+    }, 500);
+  };
 
   const searchExternalAPI = async (query: string) => {
     if (!query) {
@@ -106,7 +116,10 @@ function App() {
   //? --- LANDING PAGE VIEW ---
   if (!showDashboard) {
     return (
-      <div style={styles.landingContainer}>
+      <div
+        style={styles.landingContainer}
+        className={isExiting ? "landing-exit" : ""} // Apply exit class
+      >
         <video autoPlay loop muted playsInline style={styles.videoBackground}>
           <source src={sizzleVideo} type="video/mp4" />
           Your browser does not support the video tag.
@@ -119,7 +132,7 @@ function App() {
           <p style={styles.landingTagline}>
             Your high-contrast kitchen companion.
           </p>
-          <button style={styles.cookBtn} onClick={() => setShowDashboard(true)}>
+          <button style={styles.cookBtn} onClick={handleEnterApp}>
             Let's Cook
           </button>
         </div>
@@ -129,7 +142,7 @@ function App() {
 
   //? --- DASHBOARD VIEW ---
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="dashboard-enter">
       <h1 style={styles.header}>Sizzle Dashboard</h1>
 
       <AddRecipeForm onRecipeAdded={fetchRecipes} />
@@ -206,6 +219,7 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",
+    transition: "opacity 0.5s ease-out, transform 0.5s ease-out", // Smooth transition
   },
   videoBackground: {
     position: "absolute" as const,
@@ -218,14 +232,13 @@ const styles = {
     objectFit: "cover" as const,
     filter: "brightness(0.5)",
   },
-  //? ADD THIS SECTION TO REMOVE THE RED LINE
   videoOverlay: {
     position: "absolute" as const,
     top: 0,
     left: 0,
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(0,0,0,0.4)", //? Creates that dark cinematic tint
+    backgroundColor: "rgba(0,0,0,0.4)",
     zIndex: 1,
   },
   contentWrapper: {
@@ -248,7 +261,7 @@ const styles = {
   landingTagline: {
     fontSize: "1.4rem",
     color: "#eee",
-    marginTop: "40px", //? Pushes text further away from "SIZZLE"
+    marginTop: "40px",
     marginBottom: "40px",
     maxWidth: "600px",
     fontWeight: "300" as const,

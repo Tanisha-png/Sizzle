@@ -136,3 +136,26 @@ body,
 * {
   box-sizing: border-box;
 }
+
+/* Fade-In Effect */
+.dashboard-enter {
+  animation: slideFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px); 
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade-Out Effect on Landing Page */
+.landing-exit {
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  opacity: 0;
+  transform: scale(1.1)
+}
