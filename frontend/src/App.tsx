@@ -14,17 +14,26 @@ function App() {
   const [editingRecipe, setEditingRecipe] = useState<any | null>(null);
 
   const handleEditClick = (recipe: any) => {
-    // If you don't need targetId for anything other than a log,
-    // just remove the declaration to clear the yellow line.
     setEditingRecipe(recipe);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    //? Find the form element and scroll it into view smoothly
+    const formElement = document.getElementById("recipe-form-container");
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      //? Fallback if ID isn't found
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
-  const fetchRecipes = () => {
-    fetch("/api/recipes")
-      .then((res) => res.json())
-      .then((data) => setRecipes(data))
-      .catch((err) => console.error("Error:", err));
+  const fetchRecipes = async () => {
+    try {
+      const res = await fetch("/api/recipes");
+      const data = await res.json();
+      setRecipes(data);
+      return data; 
+    } catch (err) {
+      console.error("Error fetching recipes:", err);
+    }
   };
 
   useEffect(() => {
@@ -70,9 +79,6 @@ function App() {
   };
 
   const handleUpdate = async (id: string, updatedData: any) => {
-    //! 1. Double check which ID is being passed
-    console.log("Attempting to update recipe with ID:", id);
-
     try {
       const response = await fetch(`/api/recipes/${id}`, {
         method: "PUT",
@@ -80,19 +86,17 @@ function App() {
         body: JSON.stringify(updatedData),
       });
 
-      //! 2. Check if the response is actually JSON before parsing
-      const contentType = response.headers.get("content-type");
-      if (
-        response.ok &&
-        contentType &&
-        contentType.includes("application/json")
-      ) {
+      if (response.ok) {
         setEditingRecipe(null);
-        fetchRecipes();
-      } else {
-        //! This will catch the "404 Not Found" HTML page before it crashes your app
-        const errorText = await response.text();
-        console.error("Server returned an error:", errorText);
+        await fetchRecipes(); //? Wait for the refresh to finish
+
+        //? Small delay to allow React to re-render the list before scrolling
+        setTimeout(() => {
+          const updatedCard = document.getElementById(`recipe-${id}`);
+          if (updatedCard) {
+            updatedCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
       }
     } catch (err) {
       console.error("Update Error:", err);
@@ -173,7 +177,6 @@ function App() {
     }
   };
 
-  // Logic to determine which cards to show based on search AND filter state
   const filteredResults = (() => {
     const local = recipes.filter((recipe) =>
       recipe.title.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -181,7 +184,7 @@ function App() {
 
     if (filter === "kitchen") return local;
     if (filter === "global") return externalRecipes;
-    return [...local, ...externalRecipes]; // "all" view
+    return [...local, ...externalRecipes]; 
   })();
 
   //? --- LANDING PAGE VIEW ---
@@ -266,13 +269,16 @@ function App() {
       <div style={styles.cardGrid}>
         {filteredResults.length > 0 ? (
           filteredResults.map((recipe) => (
-            <RecipeCard
-              key={recipe._id || recipe.idMeal}
-              recipe={recipe}
-              onSave={handleSave}
-              onDelete={handleDelete}
-              onEdit={handleEditClick} // New prop
-            />
+            <div key={recipe._id} id={`recipe-${recipe._id}`}>
+              {" "}
+              {/* Add this ID wrapper */}
+              <RecipeCard
+                recipe={recipe}
+                onSave={handleSave}
+                onDelete={handleDelete}
+                onEdit={handleEditClick}
+              />
+            </div>
           ))
         ) : (
           <p style={{ color: "#aaa", textAlign: "center", width: "100%" }}>
