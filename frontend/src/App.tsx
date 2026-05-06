@@ -15,13 +15,10 @@ function App() {
 
   const handleEditClick = (recipe: any) => {
     setEditingRecipe(recipe);
-    //? Find the form element and scroll it into view smoothly
-    const formElement = document.getElementById("recipe-form-container");
+    //? Smoothly scroll to the form at the top
+    const formElement = document.getElementById("recipe-form-header");
     if (formElement) {
       formElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      //? Fallback if ID isn't found
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -227,12 +224,16 @@ function App() {
         <h1 style={styles.header}>Sizzle Dashboard</h1>
       </div>
 
-      <AddRecipeForm
-        onRecipeAdded={fetchRecipes}
-        editingRecipe={editingRecipe}
-        onUpdate={handleUpdate}
-        onCancel={() => setEditingRecipe(null)}
-      />
+      <div id="recipe-form-header">
+        {" "}
+        {/* Add this ID here */}
+        <AddRecipeForm
+          onRecipeAdded={fetchRecipes}
+          editingRecipe={editingRecipe}
+          onUpdate={handleUpdate}
+          onCancel={() => setEditingRecipe(null)}
+        />
+      </div>
 
       {/* --- Filter Pills --- */}
       <div style={styles.filterBar}>
