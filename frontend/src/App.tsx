@@ -232,12 +232,13 @@ const styles = {
   searchContainer: { marginBottom: "30px" },
   searchInput: {
     width: "100%",
-    padding: "12px 20px",
-    borderRadius: "8px",
-    border: "1px solid #333",
-    backgroundColor: "#1e1e1e",
+    padding: "15px 25px", 
+    borderRadius: "12px", 
+    border: "2px solid #333", 
+    backgroundColor: "#0a0a0a", 
     color: "#fff",
-    fontSize: "1rem",
+    fontSize: "1.1rem",
+    transition: "border-color 0.3s ease",
   },
   cardGrid: {
     display: "grid",
