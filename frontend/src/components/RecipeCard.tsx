@@ -6,11 +6,11 @@ interface RecipeCardProps {
 
     const RecipeCard = ({ recipe, onSave, onDelete }: RecipeCardProps) => {
     return (
-        <div style={styles.card}>
-        <h2 style={styles.cardTitle}>
-            {recipe.title}
-            {recipe.isExternal && <span style={styles.apiTag}>Global</span>}
-        </h2>
+        <div style={styles.card} className="recipe-card">
+            <h2 style={styles.cardTitle}>
+                {recipe.title}
+                {recipe.isExternal && <span style={styles.apiTag}>Global</span>}
+            </h2>
 
         <span style={styles.sectionTitle}>Ingredients</span>
         <div style={styles.badgeContainer}>
