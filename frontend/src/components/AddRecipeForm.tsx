@@ -1,36 +1,72 @@
 // components/AddRecipeForm.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const AddRecipeForm = ({ onRecipeAdded }: { onRecipeAdded: () => void }) => {
+interface AddRecipeFormProps {
+    onRecipeAdded: () => void;
+    editingRecipe: any | null;
+    onUpdate: (id: string, updatedData: any) => void;
+    onCancel: () => void;
+}
+
+const AddRecipeForm = ({
+    onRecipeAdded,
+    editingRecipe,
+    onUpdate,
+    onCancel,
+}: AddRecipeFormProps) => {
     const [title, setTitle] = useState("");
     const [ingredients, setIngredients] = useState("");
     const [instructions, setInstructions] = useState("");
 
+  // This hook populates the form when editingRecipe is set in App.tsx
+    useEffect(() => {
+        if (editingRecipe) {
+        setTitle(editingRecipe.title);
+        // Join array back into a string for the input field
+        setIngredients(editingRecipe.ingredients?.join(", ") || "");
+        setInstructions(editingRecipe.instructions || "");
+        } else {
+        setTitle("");
+        setIngredients("");
+        setInstructions("");
+        }
+    }, [editingRecipe]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const ingredientArray = ingredients.split(",").map((item) => item.trim());
-        const newRecipe = { title, ingredients: ingredientArray, instructions };
+        const recipeData = { title, ingredients: ingredientArray, instructions };
 
+        if (editingRecipe) {
+        // If we are in edit mode, trigger the update handler
+        onUpdate(editingRecipe._id, recipeData);
+        } else {
+        // Otherwise, proceed with the standard POST request
         try {
-        const response = await fetch("/api/recipes", {
+            const response = await fetch("/api/recipes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newRecipe),
-        });
-        if (response.ok) {
+            body: JSON.stringify(recipeData),
+            });
+            if (response.ok) {
             setTitle("");
             setIngredients("");
             setInstructions("");
             onRecipeAdded();
-        }
+            }
         } catch (err) {
-        console.error("Failed to add recipe:", err);
+            console.error("Failed to add recipe:", err);
+        }
         }
     };
 
     return (
         <form onSubmit={handleSubmit} style={styles.form}>
-        <h3 style={styles.formTitle}>Add a New Sizzle Creation</h3>
+        <h3 style={styles.formTitle}>
+            {editingRecipe
+            ? "Update Your Sizzle Creation"
+            : "Add a New Sizzle Creation"}
+        </h3>
         <div style={styles.inputGroup}>
             <input
             style={styles.input}
@@ -56,9 +92,18 @@ const AddRecipeForm = ({ onRecipeAdded }: { onRecipeAdded: () => void }) => {
             onChange={(e) => setInstructions(e.target.value)}
             />
         </div>
-        <button type="submit" style={styles.submitBtn}>
-            Save Recipe
-        </button>
+
+        <div style={styles.buttonGroup}>
+            <button type="submit" style={styles.submitBtn}>
+            {editingRecipe ? "Update Recipe" : "Save Recipe"}
+            </button>
+
+            {editingRecipe && (
+            <button type="button" onClick={onCancel} style={styles.cancelBtn}>
+                Cancel
+            </button>
+            )}
+        </div>
         </form>
     );
     };
@@ -92,12 +137,27 @@ const AddRecipeForm = ({ onRecipeAdded }: { onRecipeAdded: () => void }) => {
         height: "100px",
         resize: "vertical" as const,
     },
+    buttonGroup: {
+        display: "flex",
+        gap: "10px",
+    },
     submitBtn: {
-        width: "100%",
+        flex: 2,
         padding: "12px",
         backgroundColor: "#ff4d4d",
         color: "#fff",
         border: "none",
+        borderRadius: "8px",
+        cursor: "pointer",
+        fontWeight: "bold" as const,
+        fontSize: "1rem",
+    },
+    cancelBtn: {
+        flex: 1,
+        padding: "12px",
+        backgroundColor: "transparent",
+        color: "#888",
+        border: "1px solid #444",
         borderRadius: "8px",
         cursor: "pointer",
         fontWeight: "bold" as const,

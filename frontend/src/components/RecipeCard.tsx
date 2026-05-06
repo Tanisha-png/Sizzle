@@ -2,48 +2,57 @@ interface RecipeCardProps {
     recipe: any;
     onSave: (recipe: any) => void;
     onDelete: (id: string) => void;
-    }
+    onEdit: (recipe: any) => void;
+}
 
-    const RecipeCard = ({ recipe, onSave, onDelete }: RecipeCardProps) => {
+const RecipeCard = ({ recipe, onSave, onDelete, onEdit }: RecipeCardProps) => {
     return (
         <div style={styles.card} className="recipe-card">
             <h2 style={styles.cardTitle}>
-                {recipe.title}
-                {recipe.isExternal && <span style={styles.apiTag}>Global</span>}
+            {recipe.title}
+            {recipe.isExternal && <span style={styles.apiTag}>Global</span>}
             </h2>
 
-        <span style={styles.sectionTitle}>Ingredients</span>
-        <div style={styles.badgeContainer}>
+            <span style={styles.sectionTitle}>Ingredients</span>
+            <div style={styles.badgeContainer}>
             {recipe.ingredients?.map((ing: string, i: number) => (
-            <span key={i} style={styles.badge}>
+                <span key={i} style={styles.badge}>
                 {ing}
-            </span>
+                </span>
             ))}
-        </div>
+            </div>
 
-        <span style={styles.sectionTitle}>Instructions</span>
-        <p style={styles.instructions}>{recipe.instructions}</p>
+            <span style={styles.sectionTitle}>Instructions</span>
+            <p style={styles.instructions}>{recipe.instructions}</p>
 
-        <div style={styles.buttonGroup}>
-            <button
-            style={styles.saveBtn}
-            onClick={() => (recipe.isExternal ? onSave(recipe) : null)}
-            disabled={!recipe.isExternal}
-            >
-            {recipe.isExternal ? "Save to My Collection" : "Saved"}
-            </button>
-
-            {!recipe.isExternal && (
-            <button style={styles.deleteBtn} onClick={() => onDelete(recipe._id)}>
-                Delete
-            </button>
+            <div style={styles.buttonGroup}>
+            {/* If it's a global recipe, show the Save button */}
+            {recipe.isExternal ? (
+                <button style={styles.saveBtn} onClick={() => onSave(recipe)}>
+                Save to My Collection
+                </button>
+            ) : (
+                /* If it's a local recipe, show Edit and Delete buttons */
+                <>
+                <button
+                    style={styles.editBtn}
+                    onClick={() => onEdit(recipe)} // This passes the whole object to handleEditClick
+                >
+                    Edit
+                </button>
+                <button
+                    style={styles.deleteBtn}
+                    onClick={() => onDelete(recipe._id)}
+                >
+                    Delete
+                </button>
+                </>
             )}
-        </div>
+            </div>
         </div>
     );
     };
 
-    // Move the relevant styles here as well
     const styles = {
     card: {
         backgroundColor: "#1e1e1e",
@@ -108,7 +117,17 @@ interface RecipeCardProps {
         borderRadius: "6px",
         cursor: "pointer",
         fontWeight: "bold" as const,
-        flex: 2,
+        flex: 1,
+    },
+    editBtn: {
+        padding: "10px",
+        backgroundColor: "#333",
+        border: "1px solid #444",
+        color: "#fff",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontWeight: "bold" as const,
+        flex: 1,
     },
     deleteBtn: {
         padding: "10px",

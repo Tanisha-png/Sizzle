@@ -11,6 +11,14 @@ function App() {
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all"); 
+  const [editingRecipe, setEditingRecipe] = useState<any | null>(null);
+
+  const handleEditClick = (recipe: any) => {
+    // If you don't need targetId for anything other than a log,
+    // just remove the declaration to clear the yellow line.
+    setEditingRecipe(recipe);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const fetchRecipes = () => {
     fetch("/api/recipes")
@@ -58,6 +66,36 @@ function App() {
       const randomChoice =
         categories[Math.floor(Math.random() * categories.length)];
       searchExternalAPI(randomChoice);
+    }
+  };
+
+  const handleUpdate = async (id: string, updatedData: any) => {
+    //! 1. Double check which ID is being passed
+    console.log("Attempting to update recipe with ID:", id);
+
+    try {
+      const response = await fetch(`/api/recipes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+
+      //! 2. Check if the response is actually JSON before parsing
+      const contentType = response.headers.get("content-type");
+      if (
+        response.ok &&
+        contentType &&
+        contentType.includes("application/json")
+      ) {
+        setEditingRecipe(null);
+        fetchRecipes();
+      } else {
+        //! This will catch the "404 Not Found" HTML page before it crashes your app
+        const errorText = await response.text();
+        console.error("Server returned an error:", errorText);
+      }
+    } catch (err) {
+      console.error("Update Error:", err);
     }
   };
 
@@ -186,7 +224,12 @@ function App() {
         <h1 style={styles.header}>Sizzle Dashboard</h1>
       </div>
 
-      <AddRecipeForm onRecipeAdded={fetchRecipes} />
+      <AddRecipeForm
+        onRecipeAdded={fetchRecipes}
+        editingRecipe={editingRecipe}
+        onUpdate={handleUpdate}
+        onCancel={() => setEditingRecipe(null)}
+      />
 
       {/* --- Filter Pills --- */}
       <div style={styles.filterBar}>
@@ -204,7 +247,7 @@ function App() {
         </button>
         <button
           style={filter === "global" ? styles.activePill : styles.pill}
-          onClick={handleGlobalFilterClick} 
+          onClick={handleGlobalFilterClick}
         >
           Global Search
         </button>
@@ -228,6 +271,7 @@ function App() {
               recipe={recipe}
               onSave={handleSave}
               onDelete={handleDelete}
+              onEdit={handleEditClick} // New prop
             />
           ))
         ) : (

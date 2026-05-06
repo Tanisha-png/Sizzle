@@ -24,8 +24,9 @@ const dbUri = process.env.MONGO_URI;
 //? 1. Check if URI exists to satisfy TypeScript and prevent runtime crashes
 if (!dbUri) {
     console.error("❌ Error: MONGO_URI is undefined. Check your .env file path.");
-    process.exit(1); // Stop the server if we can't connect to the DB
+    process.exit(1);
 } else {
+    
   //? 2. Connect using the validated dbUri
 mongoose
     .connect(dbUri) 
@@ -56,6 +57,7 @@ app.delete("/api/recipes/:id", async (req, res) => {
     }
 });
 
+
 //! TODO: Add global error handler middleware (must be after all routes)
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     const defaultErr = {
@@ -68,10 +70,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.log(errorObj.log);
     return res.status(errorObj.status).json(errorObj.message);
 });
-
-// app.get('/', (req, res) => {
-//     res.send("🔥 The Sizzle Server is up and running!")
-// })
 
 //! Start server
 app.listen(3000, () => {
