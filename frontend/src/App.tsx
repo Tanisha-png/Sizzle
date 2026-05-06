@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"; // Added missing imports
+import { useEffect, useState } from "react";
 import AddRecipeForm from "./components/AddRecipeForm";
 import RecipeCard from "./components/RecipeCard";
 import sizzleVideo from "./assets/sizzle.mp4";
@@ -6,6 +6,7 @@ import sizzleVideo from "./assets/sizzle.mp4";
 function App() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
+  const [isDashboardExiting, setIsDashboardExiting] = useState(false); // New state for reverse transition
   const [recipes, setRecipes] = useState<any[]>([]);
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,13 +24,20 @@ function App() {
     }
   }, [showDashboard]);
 
-  // --- Transition Handler ---
+  // --- Transition Handlers ---
   const handleEnterApp = () => {
-    setIsExiting(true); // Start the fade/scale animation
-
-    // Delay switching components to allow the animation to play
+    setIsExiting(true);
     setTimeout(() => {
       setShowDashboard(true);
+      setIsExiting(false); // Reset landing state for future returns
+    }, 500);
+  };
+
+  const handleBackToLanding = () => {
+    setIsDashboardExiting(true); // Trigger dashboard exit animation
+    setTimeout(() => {
+      setShowDashboard(false);
+      setIsDashboardExiting(false); // Reset state after transition
     }, 500);
   };
 
@@ -118,7 +126,7 @@ function App() {
     return (
       <div
         style={styles.landingContainer}
-        className={isExiting ? "landing-exit" : ""} // Apply exit class
+        className={isExiting ? "landing-exit" : ""}
       >
         <video autoPlay loop muted playsInline style={styles.videoBackground}>
           <source src={sizzleVideo} type="video/mp4" />
@@ -142,8 +150,16 @@ function App() {
 
   //? --- DASHBOARD VIEW ---
   return (
-    <div style={styles.container} className="dashboard-enter">
-      <h1 style={styles.header}>Sizzle Dashboard</h1>
+    <div
+      style={styles.container}
+      className={isDashboardExiting ? "dashboard-exit" : "dashboard-enter"}
+    >
+      <div style={styles.navHeader}>
+        <button style={styles.backBtn} onClick={handleBackToLanding}>
+          ← Back to Kitchen
+        </button>
+        <h1 style={styles.header}>Sizzle Dashboard</h1>
+      </div>
 
       <AddRecipeForm onRecipeAdded={fetchRecipes} />
 
@@ -187,10 +203,30 @@ const styles = {
     color: "#fff",
     fontFamily: "Inter, sans-serif",
   },
+  navHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative" as const,
+    marginBottom: "30px",
+  },
+  backBtn: {
+    position: "absolute" as const,
+    left: 0,
+    backgroundColor: "transparent",
+    color: "#ff4d4d",
+    border: "1px solid #ff4d4d",
+    padding: "8px 16px",
+    borderRadius: "20px",
+    cursor: "pointer",
+    fontSize: "0.9rem",
+    fontWeight: "bold" as const,
+    transition: "all 0.2s ease",
+  },
   header: {
     textAlign: "center" as const,
     fontSize: "2.5rem",
-    marginBottom: "30px",
+    margin: 0,
     letterSpacing: "-1px",
   },
   searchContainer: { marginBottom: "30px" },
@@ -219,7 +255,6 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#000",
-    transition: "opacity 0.5s ease-out, transform 0.5s ease-out", // Smooth transition
   },
   videoBackground: {
     position: "absolute" as const,
