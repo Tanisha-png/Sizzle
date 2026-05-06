@@ -150,11 +150,15 @@ function App() {
       });
 
       if (response.ok) {
-        alert(`${recipe.title} saved to your collection!`);
-        fetchRecipes();
+        await fetchRecipes();
+        // Update the filter state to switch views
+        setFilter("kitchen");
+
+        // Scroll to the top of "My Kitchen"
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (err) {
-      console.error("Error saving recipe:", err);
+      console.error("Failed to save recipe:", err);
     }
   };
 
