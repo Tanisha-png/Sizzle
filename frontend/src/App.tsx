@@ -6,10 +6,11 @@ import sizzleVideo from "./assets/sizzle.mp4";
 function App() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [isDashboardExiting, setIsDashboardExiting] = useState(false); // New state for reverse transition
+  const [isDashboardExiting, setIsDashboardExiting] = useState(false);
   const [recipes, setRecipes] = useState<any[]>([]);
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState("all"); 
 
   const fetchRecipes = () => {
     fetch("/api/recipes")
@@ -21,24 +22,43 @@ function App() {
   useEffect(() => {
     if (showDashboard) {
       fetchRecipes();
+      if (filter === "global" && !searchTerm) {
+        searchExternalAPI("Chicken"); 
+      }
     }
-  }, [showDashboard]);
+  }, [showDashboard, filter]); 
 
-  // --- Transition Handlers ---
   const handleEnterApp = () => {
     setIsExiting(true);
     setTimeout(() => {
       setShowDashboard(true);
-      setIsExiting(false); // Reset landing state for future returns
+      setIsExiting(false);
     }, 500);
   };
 
   const handleBackToLanding = () => {
-    setIsDashboardExiting(true); // Trigger dashboard exit animation
+    setIsDashboardExiting(true);
     setTimeout(() => {
       setShowDashboard(false);
-      setIsDashboardExiting(false); // Reset state after transition
+      setIsDashboardExiting(false);
     }, 500);
+  };
+
+  const handleGlobalFilterClick = () => {
+    setFilter("global");
+    if (!searchTerm) {
+      const categories = [
+        "Pasta",
+        "Steak",
+        "Dessert",
+        "Seafood",
+        "Vegan",
+        "Chicken",
+      ];
+      const randomChoice =
+        categories[Math.floor(Math.random() * categories.length)];
+      searchExternalAPI(randomChoice);
+    }
   };
 
   const searchExternalAPI = async (query: string) => {
@@ -115,11 +135,16 @@ function App() {
     }
   };
 
-  const filteredLocal = recipes.filter((recipe) =>
-    recipe.title.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Logic to determine which cards to show based on search AND filter state
+  const filteredResults = (() => {
+    const local = recipes.filter((recipe) =>
+      recipe.title.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
 
-  const allResults = [...filteredLocal, ...externalRecipes];
+    if (filter === "kitchen") return local;
+    if (filter === "global") return externalRecipes;
+    return [...local, ...externalRecipes]; // "all" view
+  })();
 
   //? --- LANDING PAGE VIEW ---
   if (!showDashboard) {
@@ -163,10 +188,32 @@ function App() {
 
       <AddRecipeForm onRecipeAdded={fetchRecipes} />
 
+      {/* --- Filter Pills --- */}
+      <div style={styles.filterBar}>
+        <button
+          style={filter === "all" ? styles.activePill : styles.pill}
+          onClick={() => setFilter("all")}
+        >
+          All Recipes
+        </button>
+        <button
+          style={filter === "kitchen" ? styles.activePill : styles.pill}
+          onClick={() => setFilter("kitchen")}
+        >
+          My Kitchen
+        </button>
+        <button
+          style={filter === "global" ? styles.activePill : styles.pill}
+          onClick={handleGlobalFilterClick} 
+        >
+          Global Search
+        </button>
+      </div>
+
       <div style={styles.searchContainer}>
         <input
           type="text"
-          placeholder="Search global recipes..."
+          placeholder="Search recipes..."
           value={searchTerm}
           onChange={handleSearchChange}
           style={styles.searchInput}
@@ -174,18 +221,18 @@ function App() {
       </div>
 
       <div style={styles.cardGrid}>
-        {allResults.length > 0 ? (
-          allResults.map((recipe) => (
+        {filteredResults.length > 0 ? (
+          filteredResults.map((recipe) => (
             <RecipeCard
-              key={recipe._id}
+              key={recipe._id || recipe.idMeal}
               recipe={recipe}
               onSave={handleSave}
               onDelete={handleDelete}
             />
           ))
         ) : (
-          <p style={{ color: "#aaa" }}>
-            No recipes found. Try searching for 'Chicken' or 'Cake'.
+          <p style={{ color: "#aaa", textAlign: "center", width: "100%" }}>
+            No recipes found. Try adjusting your filters or search.
           </p>
         )}
       </div>
@@ -208,7 +255,9 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     position: "relative" as const,
-    marginBottom: "30px",
+    marginBottom: "40px",
+    width: "100%",
+    minHeight: "60px",
   },
   backBtn: {
     position: "absolute" as const,
@@ -228,17 +277,45 @@ const styles = {
     fontSize: "2.5rem",
     margin: 0,
     letterSpacing: "-1px",
+    padding: "0 150px", 
+  },
+  filterBar: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "15px",
+    marginBottom: "25px",
+  },
+  pill: {
+    padding: "10px 20px",
+    borderRadius: "25px",
+    border: "1px solid #444",
+    backgroundColor: "transparent",
+    color: "#888",
+    cursor: "pointer",
+    fontWeight: "bold" as const,
+    transition: "all 0.3s ease",
+  },
+  activePill: {
+    padding: "10px 20px",
+    borderRadius: "25px",
+    border: "1px solid #ff4d4d",
+    backgroundColor: "#ff4d4d",
+    color: "#fff",
+    cursor: "pointer",
+    fontWeight: "bold" as const,
+    boxShadow: "0 0 10px rgba(255, 77, 77, 0.4)",
   },
   searchContainer: { marginBottom: "30px" },
   searchInput: {
     width: "100%",
-    padding: "15px 25px", 
-    borderRadius: "12px", 
-    border: "2px solid #333", 
-    backgroundColor: "#0a0a0a", 
+    padding: "15px 25px",
+    borderRadius: "12px",
+    border: "2px solid #333",
+    backgroundColor: "#0a0a0a",
     color: "#fff",
     fontSize: "1.1rem",
     transition: "border-color 0.3s ease",
+    boxSizing: "border-box" as const,
   },
   cardGrid: {
     display: "grid",
