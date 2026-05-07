@@ -6,6 +6,7 @@ interface AddRecipeFormProps {
     editingRecipe: any | null;
     onUpdate: (id: string, updatedData: any) => void;
     onCancel: () => void;
+    token: string | null;
 }
 
 const AddRecipeForm = ({
@@ -13,6 +14,7 @@ const AddRecipeForm = ({
     editingRecipe,
     onUpdate,
     onCancel,
+    token
 }: AddRecipeFormProps) => {
     const [title, setTitle] = useState("");
     const [ingredients, setIngredients] = useState("");
@@ -44,9 +46,12 @@ const AddRecipeForm = ({
         // Otherwise, proceed with the standard POST request
         try {
             const response = await fetch("/api/recipes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(recipeData),
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // Add this line!
+                },
+                body: JSON.stringify(recipeData),
             });
             if (response.ok) {
             setTitle("");
