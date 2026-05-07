@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AddRecipeForm from "./components/AddRecipeForm";
 import RecipeCard from "./components/RecipeCard";
 import sizzleVideo from "./assets/sizzle.mp4";
+import Auth from "./components/Auth";
 
 function App() {
   const [showDashboard, setShowDashboard] = useState(false);
@@ -10,8 +11,10 @@ function App() {
   const [recipes, setRecipes] = useState<any[]>([]);
   const [externalRecipes, setExternalRecipes] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState("all"); 
+  const [filter, setFilter] = useState("all");
   const [editingRecipe, setEditingRecipe] = useState<any | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<string | null>(null);
 
   const handleEditClick = (recipe: any) => {
     setEditingRecipe(recipe);
@@ -23,24 +26,63 @@ function App() {
   };
 
   const fetchRecipes = async () => {
+    //? If no token exists, don't even try to fetch
+    if (!token) return;
+
     try {
-      const res = await fetch("/api/recipes");
-      const data = await res.json();
+      const response = await fetch("/api/recipes", {
+        headers: {
+          //? This is how the backend middleware identifies the user
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
       setRecipes(data);
-      return data; 
-    } catch (err) {
-      console.error("Error fetching recipes:", err);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      fetchRecipes();
+    } else {
+      setRecipes([]);
+    }
+  }, [token]);
 
   useEffect(() => {
     if (showDashboard) {
       fetchRecipes();
       if (filter === "global" && !searchTerm) {
-        searchExternalAPI("Chicken"); 
+        searchExternalAPI("Chicken");
       }
     }
-  }, [showDashboard, filter]); 
+  }, [showDashboard, filter]);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("username");
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(savedUser);
+    }
+  }, []);
+
+  const handleLogin = (newToken: string, newUsername: string) => {
+    setToken(newToken);
+    setUser(newUsername);
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("username", newUsername);
+  };
+
+  const handleLogout = () => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setShowDashboard(false);
+  };
 
   const handleEnterApp = () => {
     setIsExiting(true);
@@ -79,21 +121,26 @@ function App() {
     try {
       const response = await fetch(`/api/recipes/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, 
+        },
         body: JSON.stringify(updatedData),
       });
 
       if (response.ok) {
         setEditingRecipe(null);
-        await fetchRecipes(); //? Wait for the refresh to finish
+        await fetchRecipes();
 
-        //? Small delay to allow React to re-render the list before scrolling
+        //? Scroll logic remains the same
         setTimeout(() => {
           const updatedCard = document.getElementById(`recipe-${id}`);
           if (updatedCard) {
             updatedCard.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }, 100);
+      } else if (response.status === 401) {
+        alert("Session expired. Please log in again.");
       }
     } catch (err) {
       console.error("Update Error:", err);
@@ -141,7 +188,10 @@ function App() {
     try {
       const response = await fetch("/api/recipes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           title: recipe.title,
           ingredients: recipe.ingredients,
@@ -150,12 +200,20 @@ function App() {
       });
 
       if (response.ok) {
+        const savedRecipe = await response.json(); 
         await fetchRecipes();
-        // Update the filter state to switch views
         setFilter("kitchen");
 
-        // Scroll to the top of "My Kitchen"
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        //? Wait for React to render the new card, then scroll to it
+        setTimeout(() => {
+          const newCard = document.getElementById(`recipe-${savedRecipe._id}`);
+          if (newCard) {
+            newCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            newCard.style.transition = "box-shadow 0.5s";
+            newCard.style.boxShadow = "0 0 20px #ff4d4d";
+            setTimeout(() => (newCard.style.boxShadow = "none"), 2000);
+          }
+        }, 200);
       }
     } catch (err) {
       console.error("Failed to save recipe:", err);
@@ -168,6 +226,9 @@ function App() {
     try {
       const response = await fetch(`/api/recipes/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
       });
 
       if (response.ok) {
@@ -185,7 +246,7 @@ function App() {
 
     if (filter === "kitchen") return local;
     if (filter === "global") return externalRecipes;
-    return [...local, ...externalRecipes]; 
+    return [...local, ...externalRecipes];
   })();
 
   //? --- LANDING PAGE VIEW ---
@@ -221,76 +282,109 @@ function App() {
       style={styles.container}
       className={isDashboardExiting ? "dashboard-exit" : "dashboard-enter"}
     >
-      <div style={styles.navHeader}>
-        <button style={styles.backBtn} onClick={handleBackToLanding}>
-          ← Back to Kitchen
-        </button>
-        <h1 style={styles.header}>Sizzle Dashboard</h1>
-      </div>
-
-      <div id="recipe-form-header">
-        {" "}
-        {/* Add this ID here */}
-        <AddRecipeForm
-          onRecipeAdded={fetchRecipes}
-          editingRecipe={editingRecipe}
-          onUpdate={handleUpdate}
-          onCancel={() => setEditingRecipe(null)}
-        />
-      </div>
-
-      {/* --- Filter Pills --- */}
-      <div style={styles.filterBar}>
-        <button
-          style={filter === "all" ? styles.activePill : styles.pill}
-          onClick={() => setFilter("all")}
+      {!token ? (
+        //? --- Login/Register Gate --- /
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            marginTop: "50px",
+          }}
         >
-          All Recipes
-        </button>
-        <button
-          style={filter === "kitchen" ? styles.activePill : styles.pill}
-          onClick={() => setFilter("kitchen")}
-        >
-          My Kitchen
-        </button>
-        <button
-          style={filter === "global" ? styles.activePill : styles.pill}
-          onClick={handleGlobalFilterClick}
-        >
-          Global Search
-        </button>
-      </div>
+          <button style={styles.backBtn} onClick={handleBackToLanding}>
+            ← Back
+          </button>
+          <Auth onLogin={handleLogin} />
+        </div>
+      ) : (
+        //? --- Actual Dashboard Content --- /
+        <>
+          <div style={styles.navHeader}>
+            <button style={styles.backBtn} onClick={handleBackToLanding}>
+              ← Back to Landing
+            </button>
 
-      <div style={styles.searchContainer}>
-        <input
-          type="text"
-          placeholder="Search recipes..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          style={styles.searchInput}
-        />
-      </div>
+            <h1 style={styles.header}>Sizzle Dashboard</h1>
 
-      <div style={styles.cardGrid}>
-        {filteredResults.length > 0 ? (
-          filteredResults.map((recipe) => (
-            <div key={recipe._id} id={`recipe-${recipe._id}`}>
-              {" "}
-              {/* Add this ID wrapper */}
-              <RecipeCard
-                recipe={recipe}
-                onSave={handleSave}
-                onDelete={handleDelete}
-                onEdit={handleEditClick}
-              />
-            </div>
-          ))
-        ) : (
-          <p style={{ color: "#aaa", textAlign: "center", width: "100%" }}>
-            No recipes found. Try adjusting your filters or search.
-          </p>
-        )}
-      </div>
+            <button
+              style={{ ...styles.backBtn, left: "auto", right: 0 }}
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </div>
+
+          <div
+            style={{ textAlign: "center", marginBottom: "20px", color: "#888" }}
+          >
+            Welcome,{" "}
+            <span style={{ color: "#ff4d4d", fontWeight: "bold" }}>{user}</span>
+            !
+          </div>
+
+          <div id="recipe-form-header">
+            <AddRecipeForm
+              onRecipeAdded={fetchRecipes}
+              editingRecipe={editingRecipe}
+              onUpdate={handleUpdate}
+              onCancel={() => setEditingRecipe(null)}
+              token={token} 
+            />
+          </div>
+
+          {/* --- Filter Pills --- */}
+          <div style={styles.filterBar}>
+            <button
+              style={filter === "all" ? styles.activePill : styles.pill}
+              onClick={() => setFilter("all")}
+            >
+              All Recipes
+            </button>
+            <button
+              style={filter === "kitchen" ? styles.activePill : styles.pill}
+              onClick={() => setFilter("kitchen")}
+            >
+              My Kitchen
+            </button>
+            <button
+              style={filter === "global" ? styles.activePill : styles.pill}
+              onClick={handleGlobalFilterClick}
+            >
+              Global Search
+            </button>
+          </div>
+
+          <div style={styles.searchContainer}>
+            <input
+              type="text"
+              placeholder="Search recipes..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={styles.searchInput}
+            />
+          </div>
+
+          <div style={styles.cardGrid}>
+            {filteredResults.length > 0 ? (
+              filteredResults.map((recipe) => (
+                <div key={recipe._id} id={`recipe-${recipe._id}`}>
+                  <RecipeCard
+                    recipe={recipe}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                    onEdit={handleEditClick}
+                  />
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#aaa", textAlign: "center", width: "100%" }}>
+                No recipes found. Try adjusting your filters or search.
+              </p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

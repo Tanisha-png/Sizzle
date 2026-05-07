@@ -1,104 +1,123 @@
-import {Request, Response, NextFunction} from "express";
+import { Response, NextFunction } from "express";
 import Recipe from "../models/Recipe";
+import { AuthRequest } from "../middleware/authMiddleware"; // Import your custom type
 
 const recipeController = {
-    //? Get all recipes
-    getAllRecipes: async (req: Request, res: Response, next: NextFunction) => {
+  //? Get recipes only for the logged-in user
+    getAllRecipes: async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction,
+    ) => {
         try {
-            const recipes = await Recipe.find({});
-            res.locals.recipes = recipes;
-            return next();
+        // Filter by the user's ID found in the JWT
+        const recipes = await Recipe.find({ userId: req.userId });
+        res.locals.recipes = recipes;
+        return next();
         } catch (error) {
-            return next({
-                log: `recipeController.getAllRecipes: ERROR: ${error}`,
-                message: {error: "Error fetching recipes"},
-            });
+        return next({
+            log: `recipeController.getAllRecipes: ERROR: ${error}`,
+            message: { error: "Error fetching recipes" },
+        });
         }
     },
 
-    //? Create a new recipe
-    createRecipe: async (req: Request, res: Response, next: NextFunction) => {
+    //? Create a new recipe tied to the user
+    createRecipe: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            //? Create a new recipe using the data sent in the request body
-            const newRecipe = new Recipe(req.body);
-            const savedRecipe = await newRecipe.save();
+        const { title, ingredients, instructions } = req.body;
 
-            //! Guard clause
-            if (!req.body.title || !req.body.ingredients) {
-                return next({
-                    log: "recipeController.createRecipe: Missing required fields",
-                    status: 400,
-                    message: {error: "Please provide a title and ingredients 😃!"}
-                });
-            }
-
-            //? Store the result in res.locals to pass it to the next function
-            res.locals.newRecipe = savedRecipe;
-            return next();
-        } catch (error) {
-            //? Use the next function to trigger the global error handler in server.ts
-            //! NOTE: Global Handler act as a safety net
+        //! Guard clause: Check fields before trying to save
+        if (!title || !ingredients) {
             return next({
-                log: `recipeController.createRecipe: ERROR: ${error}`,
-                status: 400,
-                message: {error: "Error saving a recipe"},
+            log: "recipeController.createRecipe: Missing required fields",
+            status: 400,
+            message: { error: "Please provide a title and ingredients 😃!" },
             });
+        }
+
+        // Create recipe and manually spread body + add userId
+        const newRecipe = new Recipe({
+            ...req.body,
+            userId: req.userId, // Ensure the recipe is owned by the logged-in user
+        });
+
+        const savedRecipe = await newRecipe.save();
+        res.locals.newRecipe = savedRecipe;
+        return next();
+        } catch (error) {
+        return next({
+            log: `recipeController.createRecipe: ERROR: ${error}`,
+            status: 400,
+            message: { error: "Error saving a recipe" },
+        });
         }
     },
 
-    //? Update recipe
-    updateRecipe: async (req: Request, res: Response, next: NextFunction) => {
+    //? Update recipe (only if it belongs to the user)
+    updateRecipe: async (req: AuthRequest, res: Response, next: NextFunction) => {
         try {
-            const {id} = req.params;
-            //! req.body contains the fields you want to change (ex: change the title)
-            const updatedRecipe = await Recipe.findByIdAndUpdate(id, req.body, {
-                new: true,
-                runValidators: true, //! Make sure the new data follows your schema
-            });
+        const { id } = req.params;
 
-            if (!updatedRecipe) {
-                return next({
-                    log: "recipeController.updateRecipe: ERROR: ID not found",
-                    status: 404,
-                    message: {error: "Recipe not found"},
-                });
-            }
+        // findOneAndUpdate with userId ensures you can't edit someone else's recipe
+        const updatedRecipe = await Recipe.findOneAndUpdate(
+            { _id: id, userId: req.userId },
+            req.body,
+            { new: true, runValidators: true },
+        );
 
-            res.locals.updated = updatedRecipe;
-            return next();
-        } catch (error) {
+        if (!updatedRecipe) {
             return next({
-                log: `recipeController.updatedRecipe: ERROR: ${error}`,
-                status: 400,
-                message: {error: "Error updated recipe"},
+            log: "recipeController.updateRecipe: ERROR: ID not found or unauthorized",
+            status: 404,
+            message: { error: "Recipe not found or you don't have permission" },
             });
+        }
+
+        res.locals.updated = updatedRecipe;
+        return next();
+        } catch (error) {
+        return next({
+            log: `recipeController.updatedRecipe: ERROR: ${error}`,
+            status: 400,
+            message: { error: "Error updated recipe" },
+        });
         }
     },
 
-       //? DELETE recipe
-    deletedRecipe: async (req: Request, res: Response, next: NextFunction) => {
+    //? DELETE recipe (only if it belongs to the user)
+    deletedRecipe: async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction,
+    ) => {
         try {
-            const {id} = req.params;
-            const deletedRecipe = await Recipe.findByIdAndDelete(id);
+        const { id } = req.params;
 
-            if (!deletedRecipe) {
-                return next({
-                    log: "recipeController.deleteRecipe: ERROR: ID not found",
-                    status: 404,
-                    message: {error: "Recipe not found"},
-                });
-            }
+        // findOneAndDelete with userId for security
+        const deletedRecipe = await Recipe.findOneAndDelete({
+            _id: id,
+            userId: req.userId,
+        });
 
-            res.locals.deleted = deletedRecipe;
-            return next();
-        } catch (error) {
+        if (!deletedRecipe) {
             return next({
-                log: `recipeController.deleteRecipe: ERROR: ${error}`,
-                status: 400,
-                message: {error: "Error deleting recipe"},
+            log: "recipeController.deleteRecipe: ERROR: ID not found or unauthorized",
+            status: 404,
+            message: { error: "Recipe not found or you don't have permission" },
             });
         }
-    }
+
+        res.locals.deleted = deletedRecipe;
+        return next();
+        } catch (error) {
+        return next({
+            log: `recipeController.deleteRecipe: ERROR: ${error}`,
+            status: 400,
+            message: { error: "Error deleting recipe" },
+        });
+        }
+    },
 };
 
 export default recipeController;

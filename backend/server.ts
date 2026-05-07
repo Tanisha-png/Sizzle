@@ -10,6 +10,7 @@ import express, {Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import Recipe from "./models/Recipe";
 import recipeRoutes from "./routes/recipeRoutes";
+import authRoutes from "./routes/authRoutes";
 import { error } from "console";
 
 const app = express();
@@ -45,6 +46,7 @@ mongoose
 
 //! TODO: Use the routes
 app.use("/api/recipes", recipeRoutes);
+app.use("/api/auth", authRoutes);
 
 //! DELETE: delete a specific recipe
 app.delete("/api/recipes/:id", async (req, res) => {
