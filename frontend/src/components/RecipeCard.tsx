@@ -26,7 +26,7 @@ const RecipeCard = ({ recipe, onSave, onDelete, onEdit }: RecipeCardProps) => {
             <p style={styles.instructions}>{recipe.instructions}</p>
 
             <div style={styles.buttonGroup}>
-            //? If it's a global recipe, show the Save button */
+             {/* If it's a global recipe, show the Save button */ }
             {recipe.isExternal ? (
                 <button style={styles.saveBtn} onClick={() => onSave(recipe)}>
                 Save to My Collection
