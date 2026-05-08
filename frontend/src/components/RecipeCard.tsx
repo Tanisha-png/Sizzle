@@ -26,17 +26,17 @@ const RecipeCard = ({ recipe, onSave, onDelete, onEdit }: RecipeCardProps) => {
             <p style={styles.instructions}>{recipe.instructions}</p>
 
             <div style={styles.buttonGroup}>
-            {/* If it's a global recipe, show the Save button */}
+            //? If it's a global recipe, show the Save button */
             {recipe.isExternal ? (
                 <button style={styles.saveBtn} onClick={() => onSave(recipe)}>
                 Save to My Collection
                 </button>
             ) : (
-                /* If it's a local recipe, show Edit and Delete buttons */
+                //? If it's a local recipe, show Edit and Delete buttons */
                 <>
                 <button
                     style={styles.editBtn}
-                    onClick={() => onEdit(recipe)} // This passes the whole object to handleEditClick
+                    onClick={() => onEdit(recipe)}
                 >
                     Edit
                 </button>

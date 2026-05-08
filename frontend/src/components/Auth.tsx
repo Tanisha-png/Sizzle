@@ -32,7 +32,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         if (isLogin) {
             onLogin(data.token, data.username);
         } else {
-            setIsLogin(true); // Switch to login after successful registration
+            setIsLogin(true); //? Switch to login after successful registration
             alert("Registered! Now sizzle in. 🔥");
         }
         } catch (err: any) {

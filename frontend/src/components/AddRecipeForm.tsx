@@ -20,11 +20,11 @@ const AddRecipeForm = ({
     const [ingredients, setIngredients] = useState("");
     const [instructions, setInstructions] = useState("");
 
-  // This hook populates the form when editingRecipe is set in App.tsx
+  //? This hook populates the form when editingRecipe is set in App.tsx
     useEffect(() => {
         if (editingRecipe) {
         setTitle(editingRecipe.title);
-        // Join array back into a string for the input field
+        //? Join array back into a string for the input field
         setIngredients(editingRecipe.ingredients?.join(", ") || "");
         setInstructions(editingRecipe.instructions || "");
         } else {
@@ -40,16 +40,16 @@ const AddRecipeForm = ({
         const recipeData = { title, ingredients: ingredientArray, instructions };
 
         if (editingRecipe) {
-        // If we are in edit mode, trigger the update handler
+        //? If we are in edit mode, trigger the update handler
         onUpdate(editingRecipe._id, recipeData);
         } else {
-        // Otherwise, proceed with the standard POST request
+        //? Otherwise, proceed with the standard POST request
         try {
             const response = await fetch("/api/recipes", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`, // Add this line!
+                    Authorization: `Bearer ${token}`, 
                 },
                 body: JSON.stringify(recipeData),
             });
