@@ -240,9 +240,11 @@ function App() {
   };
 
   const filteredResults = (() => {
-    const local = recipes.filter((recipe) =>
-      recipe.title.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+    const local = Array.isArray(recipes)
+      ? recipes.filter((recipe) =>
+          recipe.title?.toLowerCase().includes(searchTerm.toLowerCase()),
+        )
+      : [];
 
     if (filter === "kitchen") return local;
     if (filter === "global") return externalRecipes;
