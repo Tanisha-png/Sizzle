@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import Recipe from "../models/Recipe";
-import { AuthRequest } from "../middleware/authMiddleware"; // Import your custom type
+import { AuthRequest } from "../middleware/authMiddleware"; 
 
 const recipeController = {
   //? Get recipes only for the logged-in user
@@ -10,7 +10,7 @@ const recipeController = {
         next: NextFunction,
     ) => {
         try {
-        // Filter by the user's ID found in the JWT
+        //? Filter by the user's ID found in the JWT
         const recipes = await Recipe.find({ userId: req.userId });
         res.locals.recipes = recipes;
         return next();
@@ -36,10 +36,10 @@ const recipeController = {
             });
         }
 
-        // Create recipe and manually spread body + add userId
+        //? Create recipe and manually spread body + add userId
         const newRecipe = new Recipe({
             ...req.body,
-            userId: req.userId, // Ensure the recipe is owned by the logged-in user
+            userId: req.userId, //? Ensure the recipe is owned by the logged-in user
         });
 
         const savedRecipe = await newRecipe.save();
@@ -59,7 +59,7 @@ const recipeController = {
         try {
         const { id } = req.params;
 
-        // findOneAndUpdate with userId ensures you can't edit someone else's recipe
+        //? findOneAndUpdate with userId ensures you can't edit someone else's recipe
         const updatedRecipe = await Recipe.findOneAndUpdate(
             { _id: id, userId: req.userId },
             req.body,
@@ -94,7 +94,7 @@ const recipeController = {
         try {
         const { id } = req.params;
 
-        // findOneAndDelete with userId for security
+        //? findOneAndDelete with userId for security
         const deletedRecipe = await Recipe.findOneAndDelete({
             _id: id,
             userId: req.userId,
