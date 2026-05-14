@@ -43,7 +43,6 @@ mongoose
 }
 
 //! TODO: Create express.static(path.resolve(import.meta.dirname, '../dist')) middleware.
-    //? command: npm run build
 
 //! TODO: Use the routes
 app.use("/api/recipes", recipeRoutes);
